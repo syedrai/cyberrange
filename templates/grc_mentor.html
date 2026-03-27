@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRC Evaluator — NullGrids</title>
+<style>
+:root{--bg:#07090f;--s1:#0b0e1a;--s2:#0f1425;--border:#181f35;--accent:#7c3aed;--blue:#00d4ff;--green:#00ff88;--red:#ff3366;--yellow:#ffcc00;--text:#dde6f0;--muted:#3d5275;--font:'Segoe UI',system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.topbar{background:var(--s1);border-bottom:2px solid var(--accent);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:var(--accent);font-weight:800;font-size:18px}
+.logo span{color:var(--text)}
+.nav a{color:#3d5275;font-size:13px;text-decoration:none;margin-left:20px}
+.main{max-width:1000px;margin:0 auto;padding:28px}
+h1{font-size:24px;font-weight:700;margin-bottom:6px;color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:28px;margin-bottom:20px}
+h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px}
+.ctrl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.ctrl-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.ctrl-card:hover{border-color:var(--accent)}
+.ctrl-card.selected{border-color:var(--accent);background:#1a103a}
+.ctrl-card .ctrl-id{font-size:11px;font-family:monospace;color:var(--blue);margin-bottom:4px}
+.ctrl-card .ctrl-name{font-size:13px;font-weight:600}
+.ctrl-card .ctrl-cat{font-size:11px;color:var(--muted);margin-top:4px}
+.ctrl-card .ctrl-weight{position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.form-field{margin-bottom:16px}
+.form-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+select,input,textarea{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:6px;font-size:13px;width:100%;font-family:var(--font)}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{height:90px;resize:vertical}
+.submit-btn{background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:6px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px}
+.submit-btn:hover{background:#6d28d9}
+.result-panel{background:#0d0a1f;border:1px solid var(--accent);border-radius:8px;padding:16px;margin-top:16px;font-family:monospace;font-size:13px;color:var(--accent)}
+.score-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px}
+.score-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));border-radius:4px;transition:width .6s}
+.status-select label{display:block;font-size:13px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-bottom:6px;transition:all .15s}
+.status-select input[type=radio]{margin-right:8px}
+.status-select label:hover{border-color:var(--accent)}
+.status-select label.s-impl{color:var(--green)}
+.status-select label.s-part{color:var(--yellow)}
+.status-select label.s-plan{color:#60a5fa}
+.status-select label.s-none{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">NULL<span>GRIDS</span> // GRC EVALUATOR</div>
+  <div class="nav">
+    <a href="/grc/dashboard">GRC Dashboard</a>
+    <a href="/soc/monitor">SOC</a>
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+<div class="main">
+  <h1>📝 GRC Control Evaluator</h1>
+  <p class="sub">Submit evidence for ISO 27001 controls. Scores are calculated based on implementation status and control weight.</p>
+
+  <div class="card">
+    <h2>Step 1 — Select Control</h2>
+    <div class="ctrl-grid" id="ctrl-grid">Loading...</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2 — Evaluate Implementation</h2>
+    <div class="form-field">
+      <label>Selected Control</label>
+      <input id="selected-ctrl" readonly placeholder="Click a control above to select">
+    </div>
+    <div class="form-field">
+      <label>Implementation Status</label>
+      <div class="status-select">
+        <label class="s-impl"><input type="radio" name="status" value="implemented"> ✅ Implemented — Control fully in place with evidence</label>
+        <label class="s-part"><input type="radio" name="status" value="partial"> ⚠️ Partial — Control partially implemented, gaps remain</label>
+        <label class="s-plan"><input type="radio" name="status" value="planned"> 📋 Planned — Control is planned but not yet deployed</label>
+        <label class="s-none"><input type="radio" name="status" value="not_implemented"> ❌ Not Implemented — Control is absent</label>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Evidence & Justification</label>
+      <textarea id="evidence-text" placeholder="Describe the evidence for this control implementation. Reference specific policies, tools, or procedures in place. Explain gaps if partial/not implemented."></textarea>
+    </div>
+    <button class="submit-btn" onclick="submitControl()">Submit Evaluation →</button>
+    <div id="result-panel"></div>
+  </div>
+
+  <div class="card">
+    <h2>Scoring Guide</h2>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="background:var(--s2);color:var(--muted);padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase">Status</th>
+        <th style="background:var(--s2);color:var(--muted);padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase">Score Multiplier</th>
+        <th style="background:var(--s2);color:var(--muted);padding:8px 14px;text-align:left;font-size:11px;text-transform:uppercase">Notes</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:var(--green)">Implemented</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">100% of weight</td><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted)">Full credit — evidence required</td></tr>
+        <tr><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:var(--yellow)">Partial</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">50% of weight</td><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted)">Partial implementation</td></tr>
+        <tr><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:#60a5fa">Planned</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">20% of weight</td><td style="padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted)">Road-mapped only</td></tr>
+        <tr><td style="padding:10px 14px;color:var(--red)">Not Implemented</td><td style="padding:10px 14px">0%</td><td style="padding:10px 14px;color:var(--muted)">Control gap — remediation needed</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+let controls = [];
+let selectedId = '';
+
+async function loadControls(){
+  const r = await fetch('/api/grc/controls');
+  controls = await r.json();
+  document.getElementById('ctrl-grid').innerHTML = controls.map(c=>`
+    <div class="ctrl-card" id="cc-${c.id}" onclick="selectCtrl('${c.id}')">
+      <div class="ctrl-weight">${c.weight}</div>
+      <div class="ctrl-id">${c.id}</div>
+      <div class="ctrl-name">${c.name}</div>
+      <div class="ctrl-cat">${c.category}</div>
+    </div>
+  `).join('');
+}
+
+function selectCtrl(id){
+  document.querySelectorAll('.ctrl-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('cc-'+id).classList.add('selected');
+  selectedId = id;
+  const ctrl = controls.find(c=>c.id===id);
+  document.getElementById('selected-ctrl').value = `${id} — ${ctrl.name}`;
+}
+
+async function submitControl(){
+  if(!selectedId){ alert('Please select a control first'); return; }
+  const status = document.querySelector('input[name=status]:checked');
+  if(!status){ alert('Please select an implementation status'); return; }
+  const evidence = document.getElementById('evidence-text').value;
+  if(!evidence.trim()){ alert('Please provide evidence or justification'); return; }
+
+  const r = await fetch('/api/grc/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({control:selectedId,status:status.value,evidence})});
+  const d = await r.json();
+  const ctrl = controls.find(c=>c.id===selectedId);
+  const maxScore = ctrl?ctrl.weight:10;
+  const pct = Math.round((d.score/maxScore)*100);
+  document.getElementById('result-panel').innerHTML = `
+    <div class="result-panel">
+      ✅ Evaluation submitted<br>
+      Control: ${d.control} | Status: ${status.value}<br>
+      Score: ${d.score} / ${maxScore} points
+      <div class="score-bar"><div class="score-fill" style="width:${pct}%"></div></div>
+    </div>
+  `;
+}
+
+loadControls();
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Admin Console{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#ff3366;font-weight:700;font-size:18px}
+.main{max-width:1100px;margin:40px auto;padding:0 32px}
+h1{font-size:24px;font-weight:700;margin-bottom:8px}
+.breach-bar{background:#ff336622;border:1px solid #ff3366;border-radius:10px;padding:20px;margin-bottom:28px}
+.breach-bar h3{color:#ff3366;margin-bottom:8px;font-size:14px}
+.bar-bg{background:#1e2a45;height:12px;border-radius:6px;margin-bottom:8px}
+.bar-fill{height:100%;background:linear-gradient(90deg,#ffcc00,#ff3366);border-radius:6px}
+.card{background:#0f1424;border:1px solid #1e2a45;border-radius:10px;padding:28px;margin-bottom:24px}
+h2{font-size:15px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{background:#151b2e;color:#64748b;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:10px 14px;border-bottom:1px solid #1e2a45;font-size:13px}
+tr:hover td{background:#151b2e}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.badge-admin{background:#ff336622;color:#ff3366;border:1px solid #ff336644}
+.badge-user{background:#00d4ff22;color:#00d4ff;border:1px solid #00d4ff44}
+.badge-soc{background:#ffcc0022;color:#ffcc00;border:1px solid #ffcc0044}
+.pwn-badge{background:#ff336611;border:1px solid #ff3366;color:#ff3366;padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:20px;display:block}
+.btn-sm{padding:5px 12px;background:#ff3366;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer}
+.exfil-btn{background:#ff3366;color:#fff;padding:14px 28px;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+</style>
+<nav class="app-nav">
+  <div class="brand">⚠️ ADMIN CONSOLE</div>
+  <div><a href="/dashboard" style="color:#94a3b8;font-size:14px;text-decoration:none">Dashboard</a> <a href="/logout" style="color:#ff3366;font-size:14px;margin-left:20px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>🛡️ Administration Console</h1>
+  <div class="pwn-badge">🚨 SECURITY ALERT: This admin access was obtained via privilege escalation chain. All actions are being logged by SOC.</div>
+
+  <div class="breach-bar">
+    <h3>🔴 BREACH METER — {{ breach.breach_pct|round(1) }}%</h3>
+    <div class="bar-bg"><div class="bar-fill" style="width:{{ breach.breach_pct }}%"></div></div>
+    <p style="color:#ff3366;font-size:12px">Stage {{ breach.current_stage }}/12 — Chain ID: {{ breach.chain_id }}</p>
+  </div>
+
+  <div class="card">
+    <h2>User Management</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td style="color:#64748b;font-family:monospace">{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td style="color:#64748b">{{ user.email }}</td>
+          <td><span class="badge badge-{{ user.role }}">{{ user.role }}</span></td>
+          <td>{{ user.department }}</td>
+          <td style="color:{% if user.active %}#00ff88{% else %}#ff3366{% endif %}">{% if user.active %}Active{% else %}Disabled{% endif %}</td>
+          <td><button class="btn-sm">Manage</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🔴 Data Exfiltration</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Final attack stage — exfiltrate financial and PII data to C2 server.</p>
+    <button class="exfil-btn" onclick="doExfil()">🔴 EXECUTE DATA EXFILTRATION</button>
+    <div id="exfil-result" style="margin-top:16px;font-family:monospace;font-size:12px;color:#ff3366"></div>
+  </div>
+</div>
+<script>
+function doExfil(){
+  fetch('/exfil',{method:'POST'}).then(r=>r.json()).then(d=>{
+    document.getElementById('exfil-result').innerHTML =
+      `✅ Exfiltrated ${(d.bytes/1e6).toFixed(1)}MB → ${d.destination}\n` +
+      `Files: ${d.files.join(', ')}`;
+  });
+}
+</script>
+{% endblock %}

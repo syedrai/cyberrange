@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#00d4ff;font-weight:700;font-size:18px}
+.main{max-width:800px;margin:40px auto;padding:0 32px}
+.card{background:#0f1424;border:1px solid #1e2a45;border-radius:10px;padding:28px;margin-bottom:24px}
+h1{font-size:24px;font-weight:700;margin-bottom:24px}
+h2{font-size:15px;font-weight:600;margin-bottom:16px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.field{margin-bottom:16px}
+.field label{font-size:12px;color:#64748b;display:block;margin-bottom:6px}
+.field input{background:#151b2e;border:1px solid #1e2a45;color:#e2e8f0;padding:10px 14px;border-radius:6px;font-size:14px;width:100%}
+.field input:focus{outline:none;border-color:#00d4ff}
+.btn{padding:10px 20px;background:#00d4ff;color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer}
+.hint{background:#ffcc0011;border:1px solid #ffcc0044;color:#ffcc00;padding:12px 16px;border-radius:8px;font-size:12px;margin-bottom:20px}
+.ssrf-result{background:#0a0e1a;border:1px solid #ff336688;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:12px;color:#00ff88;margin-top:16px;white-space:pre-wrap}
+.ssrf-url{color:#64748b;margin-bottom:8px;font-size:11px}
+.alert-banner{background:#ff336611;border:1px solid #ff3366;color:#ff3366;padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:16px}
+</style>
+<nav class="app-nav">
+  <div class="brand">MeridianTech</div>
+  <div><a href="/dashboard" style="color:#94a3b8;font-size:14px;text-decoration:none">Dashboard</a> <a href="/logout" style="color:#ff3366;font-size:14px;margin-left:20px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>⚙️ Profile Settings</h1>
+  <div class="hint">💡 Red Team: SSRF vector active. Try: <code>http://169.254.169.254/latest/meta-data/</code> or <code>http://192.168.1.1/admin</code></div>
+  <div class="card">
+    <h2>Account Information</h2>
+    <div class="field"><label>Username</label><input value="{{ user.username }}" readonly></div>
+    <div class="field"><label>Email</label><input value="{{ user.email or 'N/A' }}"></div>
+    <div class="field"><label>Department</label><input value="{{ user.department or 'N/A' }}" readonly></div>
+    <div class="field"><label>Role</label><input value="{{ user.role }}" readonly></div>
+  </div>
+  <div class="card">
+    <h2>External Profile Sync</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Enter a URL to fetch and synchronize your profile data from an external service.</p>
+    <form method="POST">
+      <div class="field">
+        <label>Integration Endpoint URL</label>
+        <input type="text" name="url" placeholder="https://api.example.com/profile" autocomplete="off">
+      </div>
+      <button type="submit" class="btn">Fetch Profile Data</button>
+    </form>
+    {% if ssrf_result %}
+    <div class="alert-banner">⚠️ Internal endpoint reached via SSRF — server made internal request</div>
+    <div class="ssrf-result"><div class="ssrf-url">→ GET {{ ssrf_result.url }}</div>{{ ssrf_result.response }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

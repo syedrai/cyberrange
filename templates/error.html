@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block body %}
+<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:40px">
+  <div style="font-size:64px;margin-bottom:20px">🔒</div>
+  <h1 style="font-size:28px;font-weight:700;margin-bottom:12px">Access Denied</h1>
+  <p style="color:#64748b;font-size:16px;margin-bottom:32px">{{ msg or "You do not have permission to access this resource." }}</p>
+  <a href="/dashboard" style="background:#00d4ff;color:#000;padding:12px 24px;border-radius:8px;font-weight:700;text-decoration:none">Return to Dashboard</a>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRC Dashboard — NullGrids</title>
+<style>
+:root{--bg:#07090f;--s1:#0b0e1a;--s2:#0f1425;--border:#181f35;--accent:#7c3aed;--blue:#00d4ff;--green:#00ff88;--red:#ff3366;--yellow:#ffcc00;--text:#dde6f0;--muted:#3d5275;--font:'Segoe UI',system-ui,sans-serif;--mono:'Courier New',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.topbar{background:var(--s1);border-bottom:2px solid var(--accent);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:var(--accent);font-weight:800;font-size:18px;letter-spacing:.05em}
+.logo span{color:var(--text)}
+.nav a{color:#3d5275;font-size:13px;text-decoration:none;margin-left:20px}
+.nav a:hover{color:var(--text)}
+.main{max-width:1300px;margin:0 auto;padding:28px}
+h1{font-size:24px;font-weight:700;margin-bottom:6px;color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab{padding:10px 20px;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px}
+h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--s2);color:var(--muted);padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px}
+tr:hover td{background:var(--s2)}
+.badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:700}
+.b-critical{background:#ff336622;color:var(--red);border:1px solid #ff336644}
+.b-high{background:#ff880022;color:#ff8800;border:1px solid #ff880044}
+.b-medium{background:#ffcc0022;color:var(--yellow);border:1px solid #ffcc0044}
+.b-open{background:#ff336622;color:var(--red)}
+.b-mitigated{background:#00ff8822;color:var(--green)}
+.b-monitoring{background:#ffcc0022;color:var(--yellow)}
+.b-critical2{background:#ff336622;color:var(--red)}
+.risk-score{display:inline-block;padding:2px 8px;border-radius:3px;font-weight:700;font-size:12px;font-family:var(--mono)}
+.rs-low{background:#00ff8822;color:var(--green)}
+.rs-med{background:#ffcc0022;color:var(--yellow)}
+.rs-high{background:#ff880022;color:#ff8800}
+.rs-crit{background:#ff336622;color:var(--red)}
+.gap-item{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;border-left:3px solid var(--red)}
+.gap-item.high{border-left-color:#ff8800}
+.gap-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.gap-control{font-size:11px;font-family:var(--mono);color:var(--blue)}
+.gap-issue{font-size:13px;font-weight:600;margin-bottom:6px}
+.gap-nist{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.score-ring{display:flex;align-items:center;gap:28px;padding:20px 0}
+.ring{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;position:relative}
+.ring-bg{position:absolute;inset:0;border-radius:50%;border:6px solid var(--border)}
+.ring-fill{position:absolute;inset:0;border-radius:50%}
+.ring-val{position:relative;z-index:1;color:var(--accent)}
+.score-details{flex:1}
+.score-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px}
+.score-val{font-weight:700;font-family:var(--mono);color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">NULL<span>GRIDS</span> // GRC</div>
+  <div class="nav">
+    <a href="/grc/mentor">GRC Evaluator</a>
+    <a href="/soc/monitor">SOC Monitor</a>
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+<div class="main">
+  <h1>📋 Governance, Risk & Compliance</h1>
+  <p class="sub">ISO 27001 gap analysis, risk register, and compliance evaluation for the active incident.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('gap')">Gap Analysis</button>
+    <button class="tab" onclick="switchTab('risk')">Risk Register</button>
+    <button class="tab" onclick="switchTab('controls')">ISO 27001 Controls</button>
+    <button class="tab" onclick="switchTab('score')">Compliance Score</button>
+  </div>
+
+  <!-- GAP ANALYSIS -->
+  <div class="tab-content active" id="tab-gap">
+    <div class="card">
+      <h2>Control Gap Analysis — Current vs Secure State</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Identifies missing or failed security controls based on observed attack stages. Mapped to ISO 27001 and NIST CSF.</p>
+      <div id="gap-list"><div style="color:var(--muted);padding:20px">Loading gap analysis...</div></div>
+    </div>
+  </div>
+
+  <!-- RISK REGISTER -->
+  <div class="tab-content" id="tab-risk">
+    <div class="card">
+      <h2>Risk Register</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Risk Description</th><th>Likelihood</th><th>Impact</th><th>Risk Score</th><th>Control</th><th>Status</th></tr></thead>
+        <tbody id="risk-table"><tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="tab-content" id="tab-controls">
+    <div class="card">
+      <h2>ISO 27001 Annex A Controls</h2>
+      <table>
+        <thead><tr><th>Control ID</th><th>Control Name</th><th>Category</th><th>Weight</th><th>Status</th></tr></thead>
+        <tbody id="controls-table"><tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCORE -->
+  <div class="tab-content" id="tab-score">
+    <div class="card">
+      <h2>Overall Compliance Score</h2>
+      <div class="score-ring">
+        <div class="ring"><span class="ring-val" id="score-pct">—</span></div>
+        <div class="score-details">
+          <div class="score-row"><span>Total Controls</span><span class="score-val" id="sc-total">14</span></div>
+          <div class="score-row"><span>Controls Failing</span><span class="score-val" style="color:var(--red)" id="sc-failing">0</span></div>
+          <div class="score-row"><span>Implemented</span><span class="score-val" style="color:var(--green)" id="sc-impl">0</span></div>
+          <div class="score-row"><span>GRC Score</span><span class="score-val" id="sc-grc">0</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Submitted Evidence</h2>
+      <table>
+        <thead><tr><th>Control</th><th>Status</th><th>Evidence</th><th>Score</th><th>Submitted</th></tr></thead>
+        <tbody>
+          {% for s in submissions %}
+          <tr>
+            <td style="font-family:var(--mono);color:var(--blue)">{{ s.control }}</td>
+            <td><span class="badge b-{{ s.status }}">{{ s.status }}</span></td>
+            <td style="color:var(--muted)">{{ s.evidence[:80] }}</td>
+            <td style="color:var(--accent);font-weight:700">{{ s.score }}</td>
+            <td style="color:var(--muted);font-size:11px">{{ s.ts }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">No submissions yet — use the GRC Evaluator</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['gap','risk','controls','score'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='gap') loadGap();
+  else if(id==='risk') loadRisk();
+  else if(id==='controls') loadControls();
+  else if(id==='score') loadScore();
+}
+
+async function loadGap(){
+  const r = await fetch('/api/grc/gap_analysis');
+  const d = await r.json();
+  const gaps = d.gaps||[];
+  document.getElementById('gap-list').innerHTML = gaps.length ?
+    `<div style="background:var(--s2);border:1px solid #ff336644;border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--red);font-size:13px">
+      ⚠️ ${gaps.length} control gaps identified from ${d.total_controls} total controls (${d.failing} failing)
+    </div>` +
+    gaps.map(g=>`
+      <div class="gap-item ${g.severity==='HIGH'?'high':''}">
+        <div class="gap-header">
+          <span class="gap-control">ISO ${g.control}</span>
+          <span class="badge b-${g.severity.toLowerCase()}">${g.severity}</span>
+        </div>
+        <div class="gap-issue">${g.issue}</div>
+        <div class="gap-nist">NIST CSF: ${g.nist}</div>
+      </div>
+    `).join('') :
+    '<div style="background:#00ff8811;border:1px solid #00ff8844;padding:16px;border-radius:8px;color:var(--green)">✅ No gaps identified — system appears secure at current breach stage</div>';
+}
+
+async function loadRisk(){
+  const r = await fetch('/api/grc/risk_register');
+  const risks = await r.json();
+  const scoreClass = s => s<=4?'rs-low':s<=9?'rs-med':s<=16?'rs-high':'rs-crit';
+  document.getElementById('risk-table').innerHTML = risks.map(rk=>{
+    const score = rk.likelihood * rk.impact;
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--blue)">${rk.id}</td>
+      <td>${rk.risk}</td>
+      <td style="text-align:center">${rk.likelihood}/5</td>
+      <td style="text-align:center">${rk.impact}/5</td>
+      <td style="text-align:center"><span class="risk-score ${scoreClass(score)}">${score}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${rk.control}</td>
+      <td><span class="badge b-${rk.status==='OPEN'?'open':rk.status==='MITIGATED'?'mitigated':rk.status==='CRITICAL'?'critical2':'monitoring'}">${rk.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadControls(){
+  const r = await fetch('/api/grc/controls');
+  const controls = await r.json();
+  const gap = await (await fetch('/api/grc/gap_analysis')).json();
+  const failingIds = new Set((gap.gaps||[]).map(g=>g.control));
+  document.getElementById('controls-table').innerHTML = controls.map(c=>{
+    const failing = failingIds.has(c.id);
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--blue)">${c.id}</td>
+      <td>${c.name}</td>
+      <td style="color:var(--muted)">${c.category}</td>
+      <td style="text-align:center;color:var(--accent)">${c.weight}</td>
+      <td><span class="badge ${failing?'b-open':'b-mitigated'}">${failing?'FAILING':'PASSING'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadScore(){
+  const gap = await (await fetch('/api/grc/gap_analysis')).json();
+  const win = await (await fetch('/api/win_conditions')).json();
+  const failing = gap.failing||0;
+  const total = gap.total_controls||14;
+  const passing = total - failing;
+  const pct = Math.round((passing/total)*100);
+  document.getElementById('score-pct').textContent = pct+'%';
+  document.getElementById('sc-total').textContent = total;
+  document.getElementById('sc-failing').textContent = failing;
+  document.getElementById('sc-impl').textContent = passing;
+  document.getElementById('sc-grc').textContent = win.grc_score||0;
+}
+
+loadGap();
+</script>
+</body>
+</html>

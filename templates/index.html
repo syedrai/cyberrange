@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MeridianTech — Enterprise Technology Solutions</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#0057b8;--blue2:#003d87;--light:#f8fafc;--dark:#0f1b2d;
+  --text:#1e293b;--muted:#64748b;--accent:#0ea5e9;--border:#e2e8f0;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);background:#fff}
+/* NAV */
+nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;padding:0 48px}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:70px;max-width:1280px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--dark);text-decoration:none}
+.logo-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px}
+nav ul{display:flex;list-style:none;gap:32px}
+nav ul a{color:var(--text);text-decoration:none;font-size:14px;font-weight:500}
+nav ul a:hover{color:var(--blue)}
+.nav-cta{background:var(--blue);color:#fff;padding:9px 20px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none}
+.nav-cta:hover{background:var(--blue2)}
+/* HERO */
+.hero{background:linear-gradient(135deg,#0f1b2d 0%,#0057b8 60%,#0ea5e9 100%);min-height:80vh;display:flex;align-items:center;padding:80px 48px}
+.hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.hero h1{font-size:52px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:20px}
+.hero h1 span{color:#60d2ff}
+.hero p{color:#94bcde;font-size:18px;line-height:1.7;margin-bottom:36px}
+.hero-btns{display:flex;gap:16px}
+.btn-hero{padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:all .2s}
+.btn-hero-primary{background:#fff;color:var(--blue)}
+.btn-hero-outline{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff}
+.hero-visual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px;backdrop-filter:blur(10px)}
+.hero-visual h3{color:#60d2ff;font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.metric-row{display:flex;justify-content:space-between;margin-bottom:20px}
+.metric{text-align:center}
+.metric .val{font-size:28px;font-weight:800;color:#fff}
+.metric .lbl{font-size:11px;color:#94bcde;margin-top:4px}
+.bar-row{display:flex;flex-direction:column;gap:8px}
+.bar-item{display:flex;align-items:center;gap:10px;font-size:12px;color:#94bcde}
+.bar-item .bar-bg{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0ea5e9,#60d2ff);border-radius:3px}
+/* SERVICES */
+section{padding:80px 48px}
+.section-inner{max-width:1280px;margin:0 auto}
+h2.section-title{font-size:36px;font-weight:800;color:var(--dark);margin-bottom:12px}
+.section-sub{color:var(--muted);font-size:16px;margin-bottom:48px}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.service-card{background:var(--light);border:1px solid var(--border);border-radius:12px;padding:32px;transition:all .2s}
+.service-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 12px 40px rgba(14,165,233,.1)}
+.service-icon{width:48px;height:48px;background:linear-gradient(135deg,#0057b8,#0ea5e9);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px}
+.service-card h3{font-size:18px;font-weight:700;margin-bottom:10px;color:var(--dark)}
+.service-card p{color:var(--muted);font-size:14px;line-height:1.7}
+/* STATS */
+.stats-section{background:var(--dark);padding:60px 48px}
+.stats-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:40px;text-align:center}
+.stat .num{font-size:42px;font-weight:800;color:#60d2ff}
+.stat .desc{color:#94bcde;font-size:14px;margin-top:8px}
+/* FOOTER */
+footer{background:var(--dark);border-top:1px solid #1e2a3a;padding:40px 48px}
+.footer-inner{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.footer-logo{color:#fff;font-weight:700;font-size:18px}
+.footer-links{display:flex;gap:24px}
+.footer-links a{color:#64748b;font-size:13px;text-decoration:none}
+.footer-links a:hover{color:#94a3b8}
+.footer-copy{color:#475569;font-size:13px}
+/* LOGIN LINK */
+.portal-bar{background:#f0f7ff;border-bottom:1px solid #bfdbfe;padding:8px 48px;text-align:right;font-size:13px}
+.portal-bar a{color:var(--blue);font-weight:600}
+</style>
+</head>
+<body>
+<div class="portal-bar">
+  Employee Portal: <a href="/login">Sign In →</a>
+</div>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon">M</div>
+      MeridianTech
+    </a>
+    <ul>
+      <li><a href="#">Solutions</a></li>
+      <li><a href="#">Platform</a></li>
+      <li><a href="#">Security</a></li>
+      <li><a href="#">Industries</a></li>
+      <li><a href="#">Company</a></li>
+    </ul>
+    <a href="/login" class="nav-cta">Employee Login</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>Enterprise Infrastructure <span>Built for Scale</span></h1>
+      <p>MeridianTech delivers next-generation cloud infrastructure, security operations, and enterprise technology solutions to Fortune 500 companies worldwide.</p>
+      <div class="hero-btns">
+        <a href="#solutions" class="btn-hero btn-hero-primary">Explore Solutions</a>
+        <a href="/login" class="btn-hero btn-hero-outline">Employee Portal</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <h3>Live Operations Dashboard</h3>
+      <div class="metric-row">
+        <div class="metric"><div class="val">99.9%</div><div class="lbl">Uptime SLA</div></div>
+        <div class="metric"><div class="val">247</div><div class="lbl">Active Clients</div></div>
+        <div class="metric"><div class="val">$4.2B</div><div class="lbl">Assets Managed</div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-item">Network <div class="bar-bg"><div class="bar-fill" style="width:92%"></div></div> 92%</div>
+        <div class="bar-item">Storage <div class="bar-bg"><div class="bar-fill" style="width:67%"></div></div> 67%</div>
+        <div class="bar-item">Compute <div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div> 78%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solutions">
+  <div class="section-inner">
+    <h2 class="section-title">Enterprise Solutions</h2>
+    <p class="section-sub">Comprehensive technology services designed for modern enterprise demands.</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">☁️</div>
+        <h3>Cloud Infrastructure</h3>
+        <p>Multi-cloud architecture, migration services, and managed infrastructure at global scale.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🔒</div>
+        <h3>Cybersecurity</h3>
+        <p>24/7 SOC monitoring, threat intelligence, incident response, and compliance management.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <h3>Data Analytics</h3>
+        <p>Real-time business intelligence, predictive modeling, and enterprise data warehousing.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤖</div>
+        <h3>AI Automation</h3>
+        <p>Process automation, machine learning pipelines, and intelligent workflow optimization.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🌐</div>
+        <h3>Network Services</h3>
+        <p>SD-WAN, zero trust networking, and global connectivity solutions for distributed teams.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📋</div>
+        <h3>GRC Platform</h3>
+        <p>Governance, risk, and compliance automation aligned to ISO 27001, NIST, and SOC 2.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-section">
+  <div class="stats-inner">
+    <div class="stat"><div class="num">14K+</div><div class="desc">Enterprise Endpoints</div></div>
+    <div class="stat"><div class="num">99.9%</div><div class="desc">Availability SLA</div></div>
+    <div class="stat"><div class="num">47</div><div class="desc">Global Data Centers</div></div>
+    <div class="stat"><div class="num">ISO 27001</div><div class="desc">Certified</div></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">MeridianTech</div>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Security</a>
+      <a href="#">Terms of Service</a>
+      <a href="/login">Employee Portal</a>
+    </div>
+    <div class="footer-copy">© 2024 MeridianTech Inc. All rights reserved.</div>
+  </div>
+</footer>
+</body>
+</html>

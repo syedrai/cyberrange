@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Financial Reports{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#00d4ff;font-weight:700;font-size:18px}
+.main{max-width:1000px;margin:40px auto;padding:0 32px}
+h1{font-size:24px;font-weight:700;margin-bottom:24px}
+.alert{background:#ff336611;border:1px solid #ff3366;color:#ff3366;padding:12px 18px;border-radius:8px;font-size:13px;margin-bottom:24px}
+.card{background:#0f1424;border:1px solid #1e2a45;border-radius:10px;padding:28px;margin-bottom:24px}
+h2{font-size:15px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{background:#151b2e;color:#64748b;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:12px 14px;border-bottom:1px solid #1e2a45;font-size:14px}
+tr:hover td{background:#151b2e}
+.amount{color:#00ff88;font-weight:700;font-family:monospace}
+.conf{background:#ff336622;color:#ff3366;border:1px solid #ff336644;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.restr{background:#ffcc0022;color:#ffcc00;border:1px solid #ffcc0044;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.int{background:#00d4ff22;color:#00d4ff;border:1px solid #00d4ff44;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+</style>
+<nav class="app-nav">
+  <div class="brand">MeridianTech</div>
+  <div><a href="/dashboard" style="color:#94a3b8;font-size:14px;text-decoration:none">Dashboard</a> <a href="/logout" style="color:#ff3366;font-size:14px;margin-left:20px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>💰 Financial Reports</h1>
+  <div class="alert">🚨 RESTRICTED ACCESS — This data is classified. Access has been logged and flagged for SOC review.</div>
+  <div class="card">
+    <h2>Account Summary — MeridianTech Financial Data</h2>
+    <table>
+      <thead><tr><th>Account</th><th>Balance</th><th>Description</th><th>Classification</th></tr></thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          <td style="font-family:monospace;color:#00d4ff">{{ row.account }}</td>
+          <td class="amount">${{ "{:,.2f}".format(row.amount) }}</td>
+          <td style="color:#94a3b8">{{ row.description }}</td>
+          <td>
+            {% if row.classification == 'CONFIDENTIAL' %}<span class="conf">{{ row.classification }}</span>
+            {% elif row.classification == 'RESTRICTED' %}<span class="restr">{{ row.classification }}</span>
+            {% else %}<span class="int">{{ row.classification }}</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div style="text-align:right;margin-top:16px;font-size:13px;color:#64748b">
+      Total Managed: <span style="color:#00ff88;font-weight:700">${{ "{:,.2f}".format(data|sum(attribute='amount')) }}</span>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Export Data</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Export all financial records for external analysis.</p>
+    <button onclick="fetch('/exfil',{method:'POST'}).then(r=>r.json()).then(d=>alert('Exfiltrated: '+d.bytes+' bytes to '+d.destination))"
+      style="background:#ff3366;color:#fff;padding:10px 20px;border:none;border-radius:6px;font-weight:700;cursor:pointer">
+      🔴 Export All Records (Trigger Exfil)
+    </button>
+  </div>
+</div>
+{% endblock %}

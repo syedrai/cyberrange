@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Employee Search{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#00d4ff;font-weight:700;font-size:18px}
+.nav-links a{color:#94a3b8;font-size:14px;text-decoration:none;margin-left:24px}
+.main{max-width:900px;margin:40px auto;padding:0 32px}
+h1{font-size:24px;font-weight:700;margin-bottom:24px}
+.search-bar{display:flex;gap:12px;margin-bottom:32px}
+.search-bar input{flex:1;background:#0f1424;border:1px solid #1e2a45;color:#e2e8f0;padding:12px 16px;border-radius:8px;font-size:15px}
+.search-bar input:focus{outline:none;border-color:#00d4ff}
+.search-bar button{background:#00d4ff;color:#000;border:none;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer}
+.result-item{background:#0f1424;border:1px solid #1e2a45;border-radius:8px;padding:16px 20px;margin-bottom:12px;font-family:'Courier New',monospace;font-size:13px}
+.result-item .type{display:inline-block;padding:2px 8px;background:#00d4ff22;color:#00d4ff;border-radius:4px;font-size:11px;font-weight:700;margin-bottom:8px}
+.result-item .data{color:#00ff88}
+.warn{background:#ff336622;border:1px solid #ff3366;color:#ff3366;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:20px}
+.hint{background:#ffcc0011;border:1px solid #ffcc0044;color:#ffcc00;padding:12px 16px;border-radius:8px;font-size:12px;margin-bottom:20px}
+</style>
+<nav class="app-nav">
+  <div class="brand">MeridianTech</div>
+  <div><a href="/dashboard" class="nav-links">Dashboard</a><a href="/logout" style="color:#ff3366;margin-left:24px;font-size:14px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>🔍 Employee Search</h1>
+  <div class="hint">💡 Red Team: Try SQL injection payloads — e.g. <code>' UNION SELECT username,password,role FROM users--</code></div>
+  <form class="search-bar" method="GET">
+    <input name="q" value="{{ q }}" placeholder="Search employees by name, department..." autocomplete="off">
+    <button type="submit">Search</button>
+  </form>
+  {% if error %}
+  <div class="warn">⚠️ DB Error: {{ error }}</div>
+  {% endif %}
+  {% if results %}
+  <p style="color:#64748b;font-size:13px;margin-bottom:16px">{{ results|length }} result(s) for "{{ q }}"</p>
+  {% if results[0].data and ('|' in results[0].data) and results|length > 1 %}
+  <div class="warn">🚨 CRITICAL: SQL injection successful — credential data extracted from database!</div>
+  {% endif %}
+  {% for r in results %}
+  <div class="result-item">
+    <div class="type">{{ r.type }}</div>
+    <div class="data">{{ r.data }}</div>
+  </div>
+  {% endfor %}
+  {% elif q %}
+  <p style="color:#64748b">No results for "{{ q }}"</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NullGrids SOC — Security Operations Center</title>
+<style>
+:root{
+  --bg:#060b14;--s1:#0a1020;--s2:#0d1628;--s3:#111e35;
+  --border:#182438;--border2:#1e2e4a;
+  --accent:#00d4ff;--green:#00ff88;--red:#ff3366;--yellow:#ffcc00;--orange:#ff8800;
+  --text:#dde6f0;--muted:#4a6080;--muted2:#2a3d58;
+  --font:'Segoe UI',system-ui,sans-serif;--mono:'Courier New',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:20px}
+.logo{color:var(--accent);font-weight:800;font-size:17px;letter-spacing:.05em}
+.logo span{color:var(--text)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-center{display:flex;gap:24px}
+.stat-pill{display:flex;align-items:center;gap:8px;padding:4px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:20px;font-size:12px}
+.stat-pill .val{color:var(--accent);font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--muted)}
+.time{font-family:var(--mono);color:var(--text);font-size:13px}
+.btn-sm{padding:5px 14px;border-radius:4px;border:none;cursor:pointer;font-size:12px;font-weight:700}
+.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:#0057b8;color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:340px 1fr 300px;grid-template-rows:1fr;flex:1;overflow:hidden}
+.panel{background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.panel-title .accent{color:var(--accent)}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-track{background:var(--s1)}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* BREACH METER */
+.breach-section{padding:16px 18px;border-bottom:1px solid var(--border)}
+.breach-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}
+.breach-pct{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--red)}
+.breach-bar-bg{background:var(--s3);height:10px;border-radius:5px;overflow:hidden;margin-bottom:10px;position:relative}
+.breach-bar-fill{height:100%;border-radius:5px;transition:width 1s ease;background:linear-gradient(90deg,#00ff88 0%,#ffcc00 40%,#ff8800 70%,#ff3366 100%)}
+.stage-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.stage-dot{height:5px;border-radius:2px;background:var(--muted2)}
+.stage-dot.done{background:var(--red)}
+.stage-dot.current{background:var(--yellow);animation:blink 1s infinite}
+
+/* ATTACK CHAIN */
+.chain-item{padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.chain-item:hover{background:var(--s2)}
+.chain-item.active-item{border-left:3px solid var(--red)}
+.chain-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.chain-stage{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.chain-name{font-size:13px;font-weight:600;color:var(--text)}
+.chain-meta{display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap}
+.chain-id{font-size:10px;color:var(--accent);font-family:var(--mono)}
+.chain-inc{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.chain-time{font-size:10px;color:var(--muted)}
+.chain-ip{font-size:10px;color:var(--yellow);font-family:var(--mono)}
+.status-badge{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase}
+.s-detected{background:#ff336622;color:var(--red);border:1px solid #ff336644}
+.s-missed{background:#ff880022;color:var(--orange);border:1px solid #ff880044}
+.s-contained{background:#00ff8822;color:var(--green);border:1px solid #00ff8844}
+
+/* CENTER: LOG VIEWER */
+.center-panel{display:flex;flex-direction:column;overflow:hidden}
+.log-toolbar{padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.filter-select{background:var(--s3);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:4px;font-size:12px;font-family:var(--font)}
+.filter-input{background:var(--s3);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:4px;font-size:12px;font-family:var(--font);flex:1;min-width:140px}
+.filter-input:focus,.filter-select:focus{outline:none;border-color:var(--accent)}
+.log-stream{flex:1;overflow-y:auto;font-family:var(--mono);font-size:12px;padding:0}
+.log-stream::-webkit-scrollbar{width:4px}
+.log-stream::-webkit-scrollbar-thumb{background:var(--border2)}
+.log-row{display:flex;padding:5px 16px;border-bottom:1px solid var(--border);gap:10px;align-items:flex-start;cursor:pointer;transition:background .1s}
+.log-row:hover{background:var(--s2)}
+.log-row.CRITICAL{border-left:3px solid var(--red);background:#ff336605}
+.log-row.HIGH{border-left:3px solid var(--orange);background:#ff880005}
+.log-row.MEDIUM{border-left:3px solid var(--yellow);background:#ffcc0005}
+.log-row.INFO{border-left:3px solid var(--muted2)}
+.log-ts{color:var(--muted);min-width:140px;flex-shrink:0;font-size:11px}
+.log-src{min-width:70px;flex-shrink:0}
+.log-src span{padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700}
+.src-access{background:#0057b822;color:#60a5fa}
+.src-auth{background:#7c3aed22;color:#a78bfa}
+.src-alerts{background:#ff336622;color:#ff3366}
+.src-webserver{background:#059669 22;color:#34d399}
+.src-endpoint{background:#d9770022;color:#fb923c}
+.src-ids{background:#dc262622;color:#f87171}
+.src-firewall{background:#0284c722;color:#38bdf8}
+.src-security{background:#9333ea22;color:#c084fc}
+.src-syslog{background:#71717a22;color:#a1a1aa}
+.log-lvl{min-width:60px;flex-shrink:0;font-size:10px;font-weight:700}
+.lvl-CRITICAL{color:var(--red)}
+.lvl-HIGH{color:var(--orange)}
+.lvl-MEDIUM{color:var(--yellow)}
+.lvl-INFO{color:var(--muted)}
+.log-msg{color:var(--text);flex:1;word-break:break-all;line-height:1.4}
+.log-ip{color:var(--yellow);min-width:100px;flex-shrink:0;font-size:11px}
+
+/* SIGMA PANEL */
+.sigma-item{padding:12px 18px;border-bottom:1px solid var(--border)}
+.sigma-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sigma-rule-id{font-size:10px;font-family:var(--mono);color:var(--accent)}
+.sigma-name{font-size:12px;font-weight:600;color:var(--text)}
+.sigma-meta{display:flex;gap:8px;margin-top:5px;font-size:10px;color:var(--muted)}
+
+/* RIGHT PANEL SECTIONS */
+.right-panel{display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)}
+.right-section{border-bottom:1px solid var(--border);flex-shrink:0}
+.right-section-header{padding:10px 16px;background:var(--s2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.right-section-body{padding:12px 16px;max-height:200px;overflow-y:auto}
+.right-section-body::-webkit-scrollbar{width:3px}
+.right-section-body::-webkit-scrollbar-thumb{background:var(--border2)}
+.ip-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ip-val{font-family:var(--mono);color:var(--yellow)}
+.ip-tag{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700}
+.tag-attacker{background:#ff336622;color:var(--red);border:1px solid #ff336644}
+.tag-suspicious{background:#ffcc0022;color:var(--yellow);border:1px solid #ffcc0044}
+.tag-blocked{background:#ff880022;color:var(--orange);border:1px solid #ff880044}
+.tag-internal{background:#00d4ff22;color:var(--accent);border:1px solid #00d4ff44}
+.ip-action{display:flex;gap:4px}
+.btn-xs{padding:2px 8px;border:1px solid var(--border2);background:transparent;color:var(--text);border-radius:3px;font-size:10px;cursor:pointer}
+.btn-xs:hover{border-color:var(--accent);color:var(--accent)}
+.btn-xs.block{border-color:#ff336666;color:var(--red)}
+.btn-xs.block:hover{background:#ff336622}
+
+/* WIN CONDITIONS */
+.win-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.win-key{color:var(--muted)}
+.win-val{color:var(--text);font-weight:600}
+.win-val.green{color:var(--green)}
+.win-val.red{color:var(--red)}
+.win-banner{padding:8px 16px;text-align:center;font-size:12px;font-weight:700;background:#00ff8822;color:var(--green);border:1px solid #00ff8844;border-radius:6px;margin:8px 16px}
+.escalate-btn{width:calc(100% - 32px);margin:10px 16px;padding:10px;background:#0057b8;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px}
+.escalate-btn:hover{background:#003d87}
+.escalate-btn.done{background:#00ff8833;color:var(--green);border:1px solid #00ff8844;cursor:default}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:12px;padding:28px;width:520px;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--accent)}
+.modal .close{float:right;cursor:pointer;color:var(--muted);font-size:18px;line-height:1}
+.modal .close:hover{color:var(--red)}
+.modal input,.modal select{background:var(--s3);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:4px;font-size:13px;width:100%;margin-bottom:12px;font-family:var(--font)}
+.modal input:focus,.modal select:focus{outline:none;border-color:var(--accent)}
+.modal-btn{padding:9px 20px;background:var(--accent);color:#000;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-size:13px}
+.log-detail{font-family:var(--mono);font-size:12px;padding:14px;background:var(--s2);border-radius:8px;color:var(--text);line-height:1.6;border:1px solid var(--border)}
+.log-detail .key{color:var(--muted);display:inline-block;min-width:120px}
+.log-detail .val{color:var(--accent)}
+</style>
+</head>
+<body>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">NULL<span>GRIDS</span> // SOC</div>
+    <div class="status-dot"></div>
+    <span style="color:var(--muted);font-size:12px">LIVE MONITORING</span>
+  </div>
+  <div class="topbar-center">
+    <div class="stat-pill">BREACH <span class="val" id="tb-breach">0%</span></div>
+    <div class="stat-pill">STAGE <span class="val" id="tb-stage">0</span>/12</div>
+    <div class="stat-pill">ALERTS <span class="val" id="tb-alerts">0</span></div>
+    <div class="stat-pill">SIGMA <span class="val" id="tb-sigma">0</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="time" id="clock">--:--:--</span>
+    <button class="btn-sm btn-outline" onclick="window.location='/logout'">Logout</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+  <!-- LEFT: BREACH + ATTACK CHAIN -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title"><span class="accent">⬡</span> BREACH / ATTACK CHAIN</span>
+      <span id="chain-count" style="font-size:11px;color:var(--muted)">0 events</span>
+    </div>
+    <div class="panel-body">
+      <!-- Breach Meter -->
+      <div class="breach-section">
+        <div class="breach-label">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">System Breach</span>
+          <span class="breach-pct" id="breach-pct">0%</span>
+        </div>
+        <div class="breach-bar-bg">
+          <div class="breach-bar-fill" id="breach-fill" style="width:0%"></div>
+        </div>
+        <div class="stage-grid" id="stage-dots">
+          <!-- 12 stage dots injected by JS -->
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted)">
+          <span>Stage <span id="cur-stage" style="color:var(--text)">0</span>/12</span>
+          <span>Chain: <span id="chain-id" style="color:var(--accent);font-family:var(--mono)">—</span></span>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <span id="dfir-status" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1e2a45;color:var(--muted)">DFIR: LOCKED</span>
+          <span id="soc-status" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1e2a45;color:var(--muted)">ESCALATED: NO</span>
+        </div>
+      </div>
+      <!-- Attack Chain -->
+      <div id="chain-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: LOG VIEWER -->
+  <div class="center-panel">
+    <div class="panel-header">
+      <span class="panel-title"><span class="accent">▸</span> LIVE LOG STREAM</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="log-count" style="font-size:11px;color:var(--muted)">0 entries</span>
+        <button class="btn-sm btn-outline" onclick="toggleAutoscroll()">Autoscroll: <span id="as-label">ON</span></button>
+        <button class="btn-sm btn-blue" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+    <div class="log-toolbar">
+      <select class="filter-select" id="f-source" onchange="applyFilters()">
+        <option value="">All Sources</option>
+        <option>access</option><option>auth</option><option>alerts</option>
+        <option>webserver</option><option>endpoint</option><option>ids</option>
+        <option>firewall</option><option>security</option><option>syslog</option>
+      </select>
+      <select class="filter-select" id="f-level" onchange="applyFilters()">
+        <option value="">All Levels</option>
+        <option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>INFO</option>
+      </select>
+      <input class="filter-input" id="f-ip" placeholder="Filter by IP..." oninput="applyFilters()">
+      <input class="filter-input" id="f-search" placeholder="Search messages..." oninput="applyFilters()">
+    </div>
+    <div class="log-stream" id="log-stream">
+      <div style="padding:40px;text-align:center;color:var(--muted)">Connecting to log streams...</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: SIGMA + IPs + WIN CONDITIONS -->
+  <div class="right-panel">
+    <!-- SIGMA Triggers -->
+    <div class="right-section" style="flex:0 0 auto">
+      <div class="right-section-header">
+        <span>⚡ SIGMA DETECTIONS</span>
+        <span id="sigma-count" style="color:var(--red)">0</span>
+      </div>
+      <div class="right-section-body" id="sigma-list"></div>
+    </div>
+
+    <!-- IP Management -->
+    <div class="right-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="right-section-header">
+        <span>🌐 IP MANAGEMENT</span>
+        <button class="btn-xs" onclick="openTagModal()">+ Tag IP</button>
+      </div>
+      <div class="right-section-body" id="ip-list" style="flex:1;overflow-y:auto;max-height:none"></div>
+    </div>
+
+    <!-- Win Conditions + Escalate -->
+    <div class="right-section" style="flex-shrink:0">
+      <div class="right-section-header"><span>🏆 COMPETITION STATE</span></div>
+      <div class="right-section-body" id="win-body"></div>
+      <button class="escalate-btn" id="escalate-btn" onclick="escalateToDF()">
+        🚨 Escalate to DFIR Team
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal">
+    <div class="close" onclick="closeModal('log-modal')">✕</div>
+    <h3>Log Entry Detail</h3>
+    <div class="log-detail" id="log-detail-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="tag-modal">
+  <div class="modal">
+    <div class="close" onclick="closeModal('tag-modal')">✕</div>
+    <h3>Tag IP Address</h3>
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">IP Address</label>
+    <input id="tag-ip" placeholder="192.168.x.x">
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Username</label>
+    <input id="tag-user" placeholder="username">
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Tag</label>
+    <select id="tag-type">
+      <option value="attacker">Attacker</option>
+      <option value="suspicious">Suspicious</option>
+      <option value="internal">Internal</option>
+      <option value="blocked">Blocked</option>
+    </select>
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Note</label>
+    <input id="tag-note" placeholder="Investigation notes...">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="modal-btn" onclick="submitTag()">Save Tag</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px">
+        <input type="checkbox" id="tag-block"> Block IP
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+let autoscroll = true;
+let logCache = [];
+let lastLogId = 0;
+const logStream = document.getElementById('log-stream');
+
+// Clock
+setInterval(()=>{
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toISOString().replace('T',' ').slice(0,19)+' UTC';
+},1000);
+
+// Stage dots init
+const dotsEl = document.getElementById('stage-dots');
+for(let i=1;i<=12;i++){
+  const d = document.createElement('div');
+  d.className = 'stage-dot';
+  d.id = `dot-${i}`;
+  d.title = `Stage ${i}`;
+  dotsEl.appendChild(d);
+}
+
+function toggleAutoscroll(){
+  autoscroll = !autoscroll;
+  document.getElementById('as-label').textContent = autoscroll?'ON':'OFF';
+}
+
+function clearFilters(){
+  ['f-source','f-level','f-ip','f-search'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  renderLogs();
+}
+
+function applyFilters(){ renderLogs(); }
+
+function renderLogs(){
+  const src = document.getElementById('f-source').value;
+  const lvl = document.getElementById('f-level').value;
+  const ip = document.getElementById('f-ip').value.toLowerCase();
+  const q = document.getElementById('f-search').value.toLowerCase();
+
+  const filtered = logCache.filter(l=>{
+    if(src && l.source!==src) return false;
+    if(lvl && l.level!==lvl) return false;
+    if(ip && !(l.ip||'').toLowerCase().includes(ip)) return false;
+    if(q && !l.message.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('log-count').textContent = filtered.length+' entries';
+
+  const rows = filtered.slice(0,500).map(l=>`
+    <div class="log-row ${l.level}" onclick="showLogDetail(${l.id})" data-id="${l.id}">
+      <span class="log-ts">${(l.ts||'').slice(11,19)}</span>
+      <span class="log-src"><span class="src-${l.source||'access'}">${(l.source||'').toUpperCase().slice(0,8)}</span></span>
+      <span class="log-lvl lvl-${l.level}">${l.level}</span>
+      <span class="log-ip">${l.ip||''}</span>
+      <span class="log-msg">${escHtml(l.message)}</span>
+    </div>
+  `).join('');
+  logStream.innerHTML = rows || '<div style="padding:40px;text-align:center;color:var(--muted)">No logs match filters</div>';
+  if(autoscroll) logStream.scrollTop = 0;
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showLogDetail(id){
+  const log = logCache.find(l=>l.id===id);
+  if(!log) return;
+  const keys = ['id','ts','source','level','ip','username','message','stage_triggered','chain_id','incident_id','sigma_rule'];
+  const html = keys.map(k=>`<div><span class="key">${k}:</span> <span class="val">${escHtml(String(log[k]||'—'))}</span></div>`).join('');
+  document.getElementById('log-detail-content').innerHTML = html;
+  document.getElementById('log-modal').classList.add('open');
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// Poll logs
+async function pollLogs(){
+  try{
+    const src = document.getElementById('f-source').value;
+    const lvl = document.getElementById('f-level').value;
+    const ip = document.getElementById('f-ip').value;
+    const q = document.getElementById('f-search').value;
+    const params = new URLSearchParams({limit:300});
+    if(src) params.append('source',src);
+    if(lvl) params.append('level',lvl);
+    if(ip) params.append('ip',ip);
+    if(q) params.append('search',q);
+    const r = await fetch('/api/soc/logs?'+params);
+    const data = await r.json();
+    logCache = data;
+    renderLogs();
+    // Alert count
+    const alerts = data.filter(l=>l.level==='CRITICAL'||l.level==='HIGH').length;
+    document.getElementById('tb-alerts').textContent = alerts;
+  }catch(e){}
+}
+
+// Poll breach
+async function pollBreach(){
+  try{
+    const r = await fetch('/api/soc/breach');
+    const d = await r.json();
+    const pct = (d.breach_pct||0).toFixed(1);
+    document.getElementById('breach-pct').textContent = pct+'%';
+    document.getElementById('breach-fill').style.width = pct+'%';
+    document.getElementById('tb-breach').textContent = pct+'%';
+    document.getElementById('tb-stage').textContent = d.current_stage||0;
+    document.getElementById('cur-stage').textContent = d.current_stage||0;
+    document.getElementById('chain-id').textContent = d.chain_id||'—';
+    // Stage dots
+    for(let i=1;i<=12;i++){
+      const dot = document.getElementById(`dot-${i}`);
+      if(!dot) continue;
+      dot.className = 'stage-dot' + (i<(d.current_stage||0)?' done':i==(d.current_stage||0)?' current':'');
+    }
+    // DFIR/SOC status
+    const dfirEl = document.getElementById('dfir-status');
+    if(d.dfir_unlocked){
+      dfirEl.style.background='#00ff8822';dfirEl.style.color='var(--green)';dfirEl.textContent='DFIR: ACTIVE';
+    }
+    const socEl = document.getElementById('soc-status');
+    if(d.soc_escalated){
+      socEl.style.background='#ffcc0022';socEl.style.color='var(--yellow)';socEl.textContent='ESCALATED: YES';
+    }
+    // Win conditions panel
+    pollWin(d);
+  }catch(e){}
+}
+
+async function pollWin(breach){
+  try{
+    const r = await fetch('/api/win_conditions');
+    const d = await r.json();
+    const body = document.getElementById('win-body');
+    body.innerHTML = `
+      <div class="win-row"><span class="win-key">Breach</span><span class="win-val ${d.breach_pct>50?'red':'green'}">${d.breach_pct.toFixed(1)}%</span></div>
+      <div class="win-row"><span class="win-key">Stage</span><span class="win-val">${d.current_stage}/12</span></div>
+      <div class="win-row"><span class="win-key">SIGMA Triggers</span><span class="win-val ${d.sigma_detections>0?'green':''}">${d.sigma_detections}</span></div>
+      <div class="win-row"><span class="win-key">DFIR Actions</span><span class="win-val">${d.dfir_actions}</span></div>
+      <div class="win-row"><span class="win-key">GRC Score</span><span class="win-val">${d.grc_score}</span></div>
+      <div class="win-row"><span class="win-key">Attacker IP</span><span class="win-val" style="font-family:var(--mono);color:var(--yellow)">${d.red_ip||'—'}</span></div>
+    `;
+    if(d.blue_team_win){
+      body.insertAdjacentHTML('afterbegin','<div class="win-banner">🏆 BLUE TEAM WIN — Breach Contained!</div>');
+    } else if(d.red_team_win){
+      body.insertAdjacentHTML('afterbegin','<div class="win-banner" style="background:#ff336622;color:var(--red);border-color:#ff336644">💀 RED TEAM WIN — Full Breach!</div>');
+    }
+    const esc = document.getElementById('escalate-btn');
+    if(d.soc_escalated){ esc.className='escalate-btn done'; esc.textContent='✅ DFIR Escalated'; }
+  }catch(e){}
+}
+
+async function escalateToDF(){
+  const btn = document.getElementById('escalate-btn');
+  btn.disabled=true;
+  try{
+    await fetch('/api/soc/escalate',{method:'POST'});
+    btn.className='escalate-btn done';
+    btn.textContent='✅ DFIR Escalated';
+  }catch(e){ btn.disabled=false; }
+}
+
+// Poll attack chain
+async function pollChain(){
+  try{
+    const r = await fetch('/api/soc/attack_chain');
+    const data = await r.json();
+    document.getElementById('chain-count').textContent = data.length+' events';
+    document.getElementById('chain-list').innerHTML = data.slice(0,30).map(c=>`
+      <div class="chain-item ${c.status==='detected'?'active-item':''}">
+        <div class="chain-header">
+          <div>
+            <div class="chain-stage">STAGE ${c.stage_id}</div>
+            <div class="chain-name">${escHtml(c.stage_name)}</div>
+          </div>
+          <span class="status-badge s-${c.status}">${c.status}</span>
+        </div>
+        <div class="chain-meta">
+          <span class="chain-id">CHAIN:${c.chain_id}</span>
+          <span class="chain-inc">${c.incident_id}</span>
+          <span class="chain-ip">${c.attacker_ip||'?'}</span>
+          <span class="chain-time">${(c.ts||'').slice(11,19)}</span>
+        </div>
+      </div>
+    `).join('');
+  }catch(e){}
+}
+
+// Poll SIGMA
+async function pollSigma(){
+  try{
+    const r = await fetch('/api/soc/sigma_triggers');
+    const data = await r.json();
+    document.getElementById('sigma-count').textContent = data.length;
+    document.getElementById('tb-sigma').textContent = data.length;
+    document.getElementById('sigma-list').innerHTML = data.slice(0,20).map(s=>`
+      <div class="sigma-item">
+        <div class="sigma-header">
+          <span class="sigma-rule-id">${s.rule_id}</span>
+          <span class="status-badge s-detected">${s.severity}</span>
+        </div>
+        <div class="sigma-name">${escHtml(s.rule_name)}</div>
+        <div class="sigma-meta">
+          <span style="color:var(--yellow);font-family:var(--mono)">${s.ip||'?'}</span>
+          <span>${(s.ts||'').slice(11,19)}</span>
+        </div>
+      </div>
+    `).join('') || '<div style="padding:16px;color:var(--muted);font-size:12px">No detections yet</div>';
+  }catch(e){}
+}
+
+// Poll IPs
+async function pollIPs(){
+  try{
+    const r = await fetch('/api/soc/ip_tags');
+    const data = await r.json();
+    const ipList = document.getElementById('ip-list');
+    // Also extract IPs from logs
+    const allIPs = [...new Set(logCache.map(l=>l.ip).filter(Boolean))];
+    const tagged = new Set(data.map(d=>d.ip));
+    const untagged = allIPs.filter(ip=>!tagged.has(ip)).slice(0,10);
+    let html = data.map(d=>`
+      <div class="ip-item">
+        <div>
+          <div class="ip-val">${d.ip}</div>
+          ${d.username?`<div style="font-size:10px;color:var(--muted)">${d.username}</div>`:''}
+        </div>
+        <div class="ip-action">
+          <span class="ip-tag tag-${d.tag}">${d.tag}</span>
+          ${!d.blocked?`<button class="btn-xs block" onclick="quickBlock('${d.ip}')">Block</button>`:`<span style="color:var(--red);font-size:10px">BLOCKED</span>`}
+        </div>
+      </div>
+    `).join('');
+    // Show untagged active IPs
+    untagged.forEach(ip=>{
+      html += `
+        <div class="ip-item" style="opacity:.6">
+          <div class="ip-val">${ip}</div>
+          <button class="btn-xs" onclick="openTagModalWithIP('${ip}')">Tag</button>
+        </div>
+      `;
+    });
+    ipList.innerHTML = html || '<div style="padding:12px;color:var(--muted);font-size:12px">No IPs tracked</div>';
+  }catch(e){}
+}
+
+function openTagModal(){ document.getElementById('tag-modal').classList.add('open'); }
+function openTagModalWithIP(ip){
+  document.getElementById('tag-ip').value=ip;
+  openTagModal();
+}
+
+async function submitTag(){
+  const ip = document.getElementById('tag-ip').value;
+  const user = document.getElementById('tag-user').value;
+  const tag = document.getElementById('tag-type').value;
+  const note = document.getElementById('tag-note').value;
+  const blocked = document.getElementById('tag-block').checked?1:0;
+  await fetch('/api/soc/ip_tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip,username:user,tag,blocked,note})});
+  closeModal('tag-modal');
+  pollIPs();
+}
+
+async function quickBlock(ip){
+  await fetch('/api/soc/ip_tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip,tag:'blocked',blocked:1,note:'Quick block from SOC dashboard'})});
+  pollIPs();
+}
+
+// Start polling
+pollLogs(); pollBreach(); pollChain(); pollSigma(); pollIPs();
+setInterval(pollLogs, 3000);
+setInterval(pollBreach, 4000);
+setInterval(pollChain, 5000);
+setInterval(pollSigma, 8000);
+setInterval(pollIPs, 10000);
+</script>
+</body>
+</html>

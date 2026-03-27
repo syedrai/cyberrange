@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Employee Record{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#00d4ff;font-weight:700;font-size:18px}
+.main{max-width:700px;margin:40px auto;padding:0 32px}
+h1{font-size:24px;font-weight:700;margin-bottom:24px}
+.card{background:#0f1424;border:1px solid #1e2a45;border-radius:10px;padding:28px}
+.row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #1e2a45;font-size:14px}
+.row .key{color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.row .val{color:#e2e8f0;font-family:monospace}
+.critical-val{color:#ff3366;font-weight:700}
+.idor-badge{background:#ff336622;border:1px solid #ff3366;color:#ff3366;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;margin-bottom:20px;display:inline-block}
+.not-found{text-align:center;padding:60px;color:#64748b}
+.nav-arrows{display:flex;gap:12px;margin-bottom:20px}
+.nav-arrows a{background:#0f1424;border:1px solid #1e2a45;color:#e2e8f0;padding:8px 16px;border-radius:6px;font-size:13px;text-decoration:none}
+.nav-arrows a:hover{border-color:#00d4ff;color:#00d4ff}
+</style>
+<nav class="app-nav">
+  <div class="brand">MeridianTech</div>
+  <div><a href="/employee" style="color:#94a3b8;font-size:14px;text-decoration:none">Directory</a> <a href="/logout" style="color:#ff3366;font-size:14px;margin-left:20px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>👤 Employee Record</h1>
+  {% if eid %}
+  <div class="nav-arrows">
+    <a href="/employee?id={{ eid - 1 }}">← Prev (ID {{ eid - 1 }})</a>
+    <a href="/employee?id={{ eid + 1 }}">Next (ID {{ eid + 1 }}) →</a>
+  </div>
+  {% endif %}
+  {% if emp %}
+  <div class="idor-badge">⚠️ IDOR — Record accessed by unauthorized user</div>
+  <div class="card">
+    <div class="row"><span class="key">Record ID</span><span class="val">EMP-{{ '%04d'|format(emp.id) }}</span></div>
+    <div class="row"><span class="key">Username</span><span class="val">{{ emp.username }}</span></div>
+    <div class="row"><span class="key">Email</span><span class="val">{{ emp.email }}</span></div>
+    <div class="row"><span class="key">Department</span><span class="val">{{ emp.department }}</span></div>
+    <div class="row"><span class="key">IP Address</span><span class="val">{{ emp.ip }}</span></div>
+    <div class="row"><span class="key">Annual Salary</span><span class="val critical-val">${{ "{:,.2f}".format(emp.salary) }}</span></div>
+    <div class="row"><span class="key">SSN</span><span class="val critical-val">{{ emp.ssn }}</span></div>
+    <div class="row"><span class="key">Notes</span><span class="val">{{ emp.notes }}</span></div>
+  </div>
+  {% else %}
+  <div class="card"><div class="not-found">No record found for ID {{ eid }}</div></div>
+  {% endif %}
+</div>
+{% endblock %}

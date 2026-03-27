@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}DFIR — Locked{% endblock %}
+{% block body %}
+<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:40px">
+  <div style="font-size:64px;margin-bottom:20px">🔒</div>
+  <h1 style="font-size:28px;font-weight:700;margin-bottom:12px;color:#ff8800">DFIR Portal — Locked</h1>
+  <p style="color:#64748b;font-size:16px;max-width:500px;line-height:1.7;margin-bottom:24px">
+    DFIR portal is locked until <strong style="color:#ffcc00">Breach ≥ 60%</strong> AND 
+    <strong style="color:#ffcc00">SOC Escalation</strong> is triggered.<br><br>
+    Current Breach: <strong style="color:#ff3366">{{ breach.breach_pct|round(1) }}%</strong> | 
+    SOC Escalated: <strong style="color:#{{ 'ff3366' if not breach.soc_escalated else '00ff88' }}">{{ 'NO' if not breach.soc_escalated else 'YES' }}</strong>
+  </p>
+  <a href="/soc/monitor" style="background:#ff8800;color:#000;padding:12px 24px;border-radius:8px;font-weight:700;text-decoration:none">Go to SOC Monitor →</a>
+</div>
+{% endblock %}

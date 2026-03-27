@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}File Manager{% endblock %}
+{% block body %}
+<style>
+.app-nav{background:#0f1424;border-bottom:1px solid #1e2a45;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{color:#00d4ff;font-weight:700;font-size:18px}
+.main{max-width:900px;margin:40px auto;padding:0 32px}
+h1{font-size:24px;font-weight:700;margin-bottom:24px}
+.card{background:#0f1424;border:1px solid #1e2a45;border-radius:10px;padding:28px;margin-bottom:24px}
+h2{font-size:15px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px}
+.upload-zone{border:2px dashed #1e2a45;border-radius:8px;padding:40px;text-align:center;cursor:pointer;transition:border .2s;margin-bottom:16px}
+.upload-zone:hover{border-color:#00d4ff}
+.upload-zone p{color:#64748b;font-size:14px}
+.btn{padding:10px 20px;background:#00d4ff;color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer}
+.btn-red{background:#ff3366;color:#fff}
+.hint{background:#ffcc0011;border:1px solid #ffcc0044;color:#ffcc00;padding:12px 16px;border-radius:8px;font-size:12px;margin-bottom:20px}
+.success{background:#00ff8811;border:1px solid #00ff88;color:#00ff88;padding:12px 16px;border-radius:8px;font-size:13px;margin-top:12px}
+.critical{background:#ff336611;border:1px solid #ff3366;color:#ff3366;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.terminal{background:#000;border:1px solid #00ff88;border-radius:8px;padding:20px;font-family:'Courier New',monospace;font-size:13px;color:#00ff88;margin-top:16px}
+.terminal .prompt{color:#64748b;margin-bottom:8px}
+.terminal .out{white-space:pre-wrap}
+.cmd-input{background:#111;border:1px solid #1e2a45;color:#00ff88;padding:10px;border-radius:4px;font-family:monospace;font-size:13px;width:100%}
+.cmd-input:focus{outline:none;border-color:#00ff88}
+.file-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e2a45;font-size:13px}
+</style>
+<nav class="app-nav">
+  <div class="brand">MeridianTech</div>
+  <div><a href="/dashboard" style="color:#94a3b8;font-size:14px;text-decoration:none">Dashboard</a> <a href="/logout" style="color:#ff3366;font-size:14px;margin-left:20px">Logout</a></div>
+</nav>
+<div class="main">
+  <h1>📁 File Manager</h1>
+  <div class="hint">💡 Red Team: Upload a .php webshell to /upload, then use the RCE terminal below. No file type validation on server side.</div>
+
+  <div class="card">
+    <h2>Upload Document</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="upload-zone">
+        <p style="font-size:24px;margin-bottom:8px">📤</p>
+        <p>Drag & drop or click to select file</p>
+        <p style="font-size:11px;margin-top:8px;color:#475569">Supported: PDF, DOCX, XLSX, PNG, JPG — (or any file...)</p>
+        <input type="file" name="file" style="margin-top:16px">
+      </div>
+      <button type="submit" class="btn">Upload File</button>
+    </form>
+    {% if upload_result %}
+    <div class="{% if upload_result.filename.endswith('.php') or upload_result.filename.endswith('.jsp') %}critical{% else %}success{% endif %}">
+      {% if upload_result.filename.endswith('.php') or upload_result.filename.endswith('.jsp') %}
+      🚨 WEBSHELL UPLOADED: {{ upload_result.filename }} → {{ upload_result.path }}
+      {% else %}
+      ✅ File uploaded: {{ upload_result.filename }} → {{ upload_result.path }}
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Existing Files</h2>
+    <div class="file-row"><span>📄 Q3_Financial_Report.pdf</span><span style="color:#64748b">2.4 MB — 2024-11-12</span></div>
+    <div class="file-row"><span>📄 Employee_Roster_2024.xlsx</span><span style="color:#64748b">890 KB — 2024-11-08</span></div>
+    <div class="file-row"><span>📄 IT_Policy_v3.docx</span><span style="color:#64748b">156 KB — 2024-10-30</span></div>
+    {% if upload_result and (upload_result.filename.endswith('.php') or upload_result.filename.endswith('.asp') or upload_result.filename.endswith('.jsp')) %}
+    <div class="file-row" style="border-color:#ff3366"><span style="color:#ff3366">🔴 {{ upload_result.filename }}</span><span style="color:#ff3366">WEBSHELL — {{ upload_result.path }}</span></div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>🔴 Remote Execution Terminal (Post-Webshell)</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Once a webshell is uploaded, use this to execute commands on the server.</p>
+    {% if rce_result %}
+    <div class="critical">🚨 RCE EXECUTED — Command ran as www-data on web server</div>
+    {% endif %}
+    <form method="POST">
+      <div class="terminal">
+        <div class="prompt">www-data@meridian-web01:/var/www/html$ </div>
+        <input type="text" name="cmd" class="cmd-input" placeholder="whoami" autocomplete="off" value="">
+      </div>
+      {% if rce_result %}
+      <div class="terminal" style="margin-top:8px">
+        <div class="out">{{ rce_result }}</div>
+      </div>
+      {% endif %}
+      <button type="submit" class="btn btn-red" style="margin-top:12px">Execute Command</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

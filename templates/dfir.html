@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DFIR Portal — NullGrids</title>
+<style>
+:root{--bg:#06080f;--s1:#090d1a;--s2:#0d1226;--border:#161e33;--accent:#ff8800;--blue:#00d4ff;--green:#00ff88;--red:#ff3366;--text:#dde6f0;--muted:#3d5275;--font:'Segoe UI',system-ui,sans-serif;--mono:'Courier New',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.topbar{background:var(--s1);border-bottom:2px solid var(--accent);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{color:var(--accent);font-weight:800;font-size:18px;letter-spacing:.05em}
+.logo span{color:var(--text)}
+.nav-links a{color:#4a6080;font-size:13px;text-decoration:none;margin-left:20px}
+.nav-links a:hover{color:var(--text)}
+.main{max-width:1300px;margin:0 auto;padding:28px}
+h1{font-size:24px;font-weight:700;margin-bottom:6px;color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:24px}
+.card-full{grid-column:1/-1}
+h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px}
+.action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.action-btn{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:20px;cursor:pointer;text-align:left;transition:all .2s;color:var(--text)}
+.action-btn:hover{border-color:var(--accent);background:#1a0e00}
+.action-btn .icon{font-size:24px;margin-bottom:10px}
+.action-btn .title{font-size:14px;font-weight:600;margin-bottom:4px}
+.action-btn .desc{font-size:12px;color:var(--muted)}
+.action-btn input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:4px;font-size:12px;width:100%;margin-top:10px;font-family:var(--mono)}
+.action-btn input:focus{outline:none;border-color:var(--accent)}
+.execute-btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:4px;font-weight:700;font-size:12px;cursor:pointer;margin-top:8px;width:100%}
+.timeline{padding:0}
+.tl-item{display:flex;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-CRITICAL{background:var(--red)}
+.tl-HIGH{background:var(--accent)}
+.tl-MEDIUM{background:#ffcc00}
+.tl-INFO{background:var(--muted)}
+.tl-line{display:flex;flex-direction:column;gap:2px;flex:1}
+.tl-time{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.tl-msg{font-size:12px;color:var(--text);line-height:1.5}
+.tl-meta{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.breach-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-val{font-weight:700;font-family:var(--mono)}
+.stat-val.red{color:var(--red)}
+.stat-val.green{color:var(--green)}
+.stat-val.orange{color:var(--accent)}
+.log-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:var(--mono)}
+.log-ts{color:var(--muted);min-width:80px;flex-shrink:0}
+.log-src{min-width:60px;flex-shrink:0;color:var(--blue)}
+.log-msg{color:var(--text);flex:1;word-break:break-all}
+.log-ip{color:#ffcc00;min-width:90px;flex-shrink:0}
+.action-result{background:#0a0500;border:1px solid var(--accent);border-radius:6px;padding:12px;font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:12px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--s2);color:var(--muted);padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700}
+.badge-green{background:#00ff8822;color:var(--green);border:1px solid #00ff8844}
+.badge-red{background:#ff336622;color:var(--red);border:1px solid #ff336644}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">NULL<span>GRIDS</span> // DFIR</div>
+  <div class="nav-links">
+    <a href="/soc/monitor">SOC Monitor</a>
+    <a href="/dfir">DFIR Portal</a>
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+<div class="main">
+  <h1>🔬 Digital Forensics & Incident Response</h1>
+  <p class="sub">Evidence analysis, timeline reconstruction, and containment actions for the active incident.</p>
+
+  <div class="grid">
+    <!-- Breach Summary -->
+    <div class="card">
+      <h2>Incident Summary</h2>
+      <div id="breach-summary">
+        <div class="breach-stat"><span>Breach Level</span><span class="stat-val red" id="dfir-pct">Loading...</span></div>
+        <div class="breach-stat"><span>Attack Stage</span><span class="stat-val orange" id="dfir-stage">—</span></div>
+        <div class="breach-stat"><span>DFIR Status</span><span class="stat-val green" id="dfir-status">—</span></div>
+        <div class="breach-stat"><span>Attacker IP</span><span class="stat-val" style="color:#ffcc00;font-family:monospace" id="dfir-ip">—</span></div>
+        <div class="breach-stat"><span>Chain ID</span><span class="stat-val" style="color:var(--blue);font-family:monospace" id="dfir-chain">—</span></div>
+      </div>
+    </div>
+
+    <!-- IR Actions -->
+    <div class="card">
+      <h2>Containment Actions</h2>
+      <div class="action-grid">
+        <div class="action-btn">
+          <div class="icon">🚫</div>
+          <div class="title">Block IP</div>
+          <div class="desc">Firewall block attacker IP</div>
+          <input id="block-ip" placeholder="192.168.x.x / attacker IP">
+          <button class="execute-btn" onclick="execAction('block_ip','block-ip')">Execute Block</button>
+        </div>
+        <div class="action-btn">
+          <div class="icon">👤</div>
+          <div class="title">Disable Account</div>
+          <div class="desc">Revoke user access immediately</div>
+          <input id="dis-user" placeholder="username">
+          <button class="execute-btn" onclick="execAction('disable_account','dis-user')">Disable User</button>
+        </div>
+        <div class="action-btn">
+          <div class="icon">🔑</div>
+          <div class="title">Revoke Sessions</div>
+          <div class="desc">Kill all active sessions</div>
+          <input id="rev-user" placeholder="username">
+          <button class="execute-btn" onclick="execAction('revoke_sessions','rev-user')">Revoke Sessions</button>
+        </div>
+        <div class="action-btn">
+          <div class="icon">🦠</div>
+          <div class="title">Remove Malware</div>
+          <div class="desc">Delete webshell + patch system</div>
+          <button class="execute-btn" onclick="execAction('remove_malware','')">Remove Webshell</button>
+        </div>
+        <div class="action-btn">
+          <div class="icon">🔄</div>
+          <div class="title">Restore Services</div>
+          <div class="desc">Restore to known-good state</div>
+          <button class="execute-btn" onclick="execAction('restore_services','')">Restore</button>
+        </div>
+        <div class="action-btn">
+          <div class="icon">📦</div>
+          <div class="title">Evidence Bundle</div>
+          <div class="desc">Collect & download artifacts</div>
+          <button class="execute-btn" onclick="loadEvidence()">Collect Evidence</button>
+        </div>
+      </div>
+      <div id="action-result"></div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card card-full">
+      <h2>Attack Timeline</h2>
+      <div id="timeline" style="max-height:300px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Evidence Logs -->
+    <div class="card card-full">
+      <h2>Evidence Logs (Attack-Related)</h2>
+      <div id="evidence-logs" style="max-height:280px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Past Actions -->
+    <div class="card card-full">
+      <h2>DFIR Actions Log</h2>
+      <table>
+        <thead><tr><th>Action</th><th>Target</th><th>Performed By</th><th>Result</th><th>Time</th></tr></thead>
+        <tbody id="actions-table">
+          {% for a in actions %}
+          <tr>
+            <td><span class="badge badge-red">{{ a.action }}</span></td>
+            <td style="font-family:monospace">{{ a.target }}</td>
+            <td>{{ a.performed_by }}</td>
+            <td style="color:var(--green)">{{ a.result }}</td>
+            <td style="color:var(--muted)">{{ a.ts }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">No actions recorded yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+async function execAction(action, inputId){
+  const target = inputId ? (document.getElementById(inputId)||{}).value || '' : '';
+  const res = await fetch('/api/dfir/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,target})});
+  const d = await res.json();
+  document.getElementById('action-result').innerHTML = `<div class="action-result">✅ ${d.result}\nNew Breach: ${d.breach.breach_pct.toFixed(1)}%</div>`;
+  pollBreach();
+  loadActions();
+}
+
+async function pollBreach(){
+  const r = await fetch('/api/soc/breach');
+  const d = await r.json();
+  document.getElementById('dfir-pct').textContent = d.breach_pct.toFixed(1)+'%';
+  document.getElementById('dfir-stage').textContent = 'Stage '+d.current_stage+'/12';
+  document.getElementById('dfir-status').textContent = d.dfir_unlocked?'ACTIVE':'LOCKED';
+  document.getElementById('dfir-ip').textContent = d.red_ip||'Unknown';
+  document.getElementById('dfir-chain').textContent = d.chain_id||'—';
+}
+
+async function loadTimeline(){
+  const r = await fetch('/api/dfir/timeline');
+  const data = await r.json();
+  document.getElementById('timeline').innerHTML = data.map(l=>`
+    <div class="tl-item">
+      <div class="tl-dot tl-${l.level}"></div>
+      <div class="tl-line">
+        <div class="tl-time">${l.ts} | Stage ${l.stage_triggered}</div>
+        <div class="tl-msg">${l.message.replace(/</g,'&lt;')}</div>
+        <div class="tl-meta">${l.source.toUpperCase()} | IP: ${l.ip||'—'} | ${l.incident_id||''}</div>
+      </div>
+    </div>
+  `).join('') || '<div style="padding:20px;color:var(--muted)">No attack events recorded</div>';
+}
+
+async function loadEvidence(){
+  const r = await fetch('/api/dfir/evidence');
+  const d = await r.json();
+  const logs = d.logs||[];
+  document.getElementById('evidence-logs').innerHTML = logs.map(l=>`
+    <div class="log-row">
+      <span class="log-ts">${(l.ts||'').slice(11,19)}</span>
+      <span class="log-src">[${l.source.toUpperCase()}]</span>
+      <span class="log-ip">${l.ip||''}</span>
+      <span class="log-msg">${l.message.replace(/</g,'&lt;')}</span>
+    </div>
+  `).join('');
+  document.getElementById('action-result').innerHTML = `<div class="action-result">✅ Evidence collected: ${logs.length} logs, ${(d.packets||[]).length} packets, ${(d.sigma||[]).length} SIGMA triggers</div>`;
+}
+
+async function loadActions(){
+  // Just reload page to show updated actions
+}
+
+pollBreach();
+loadTimeline();
+setInterval(pollBreach,5000);
+setInterval(loadTimeline,8000);
+</script>
+</body>
+</html>

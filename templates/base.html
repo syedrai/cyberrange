@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}MeridianTech{% endblock %}</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --surface: #0f1424;
+  --surface2: #151b2e;
+  --border: #1e2a45;
+  --accent: #00d4ff;
+  --accent2: #ff3366;
+  --green: #00ff88;
+  --yellow: #ffcc00;
+  --red: #ff3366;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --font-mono: 'Courier New', monospace;
+  --font-sans: 'Segoe UI', system-ui, sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-sans); min-height:100vh; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.btn {
+  display:inline-block; padding:10px 22px; border-radius:6px;
+  border:none; cursor:pointer; font-size:14px; font-weight:600;
+  transition:all .2s; font-family:var(--font-sans);
+}
+.btn-primary { background:var(--accent); color:#000; }
+.btn-primary:hover { background:#00b8d9; }
+.btn-danger { background:var(--accent2); color:#fff; }
+.btn-danger:hover { background:#cc0033; }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:24px;
+}
+.badge {
+  display:inline-block; padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+}
+.badge-critical { background:#ff336622; color:#ff3366; border:1px solid #ff336644; }
+.badge-high { background:#ff660022; color:#ff6600; border:1px solid #ff660044; }
+.badge-medium { background:#ffcc0022; color:#ffcc00; border:1px solid #ffcc0044; }
+.badge-low { background:#00ff8822; color:#00ff88; border:1px solid #00ff8844; }
+.badge-info { background:#00d4ff22; color:#00d4ff; border:1px solid #00d4ff44; }
+input, select, textarea {
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); padding:10px 14px; border-radius:6px;
+  font-family:var(--font-sans); font-size:14px; width:100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline:none; border-color:var(--accent);
+}
+table { width:100%; border-collapse:collapse; }
+th { background:var(--surface2); color:var(--muted); padding:10px 14px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:13px; }
+tr:hover td { background:var(--surface2); }
+.toast {
+  position:fixed; bottom:20px; right:20px; z-index:9999;
+  background:var(--surface); border:1px solid var(--accent);
+  padding:14px 20px; border-radius:8px; color:var(--text);
+  font-size:13px; animation:slideIn .3s ease;
+}
+@keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+.pulse { animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script>
+function toast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderColor = type==='error'?'#ff3366':type==='success'?'#00ff88':'#00d4ff';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
