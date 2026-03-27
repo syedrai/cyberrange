@@ -11,8 +11,9 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = os.urandom(32)
-DB_PATH = "nullgrids.db"
+# Fixed secret key — os.urandom(32) changes every restart and kills all sessions
+app.secret_key = os.environ.get("SECRET_KEY", "nullgrids-cyber-range-fixed-key-2024")
+DB_PATH = os.environ.get("DB_PATH", "nullgrids.db")
 
 # ─── CONSTANTS ────────────────────────────────────────────────────────────────
 ATTACK_STAGES = [
@@ -932,6 +933,30 @@ def api_escalate():
     write_log("security","CRITICAL","SOC escalation triggered — DFIR team notified",
               username=session.get("user"))
     return jsonify({"status":"escalated","dfir_check": get_breach().get("dfir_unlocked",0)})
+
+@app.route("/api/soc/flag_ip", methods=["POST"])
+@role_required("soc","admin")
+def api_flag_ip():
+    """Quick-flag an IP from a log entry with a tag and note."""
+    data = request.json or {}
+    ip   = data.get("ip","")
+    tag  = data.get("tag", "suspicious")
+    note = data.get("note", "Flagged from log entry")
+    if not ip:
+        return jsonify({"error": "ip required"}), 400
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute(
+        "INSERT OR REPLACE INTO ip_tags(ip,tag,username,blocked,note,ts) VALUES(?,?,?,0,?,?)",
+        (ip, tag, session.get("user","SOC"), note,
+         datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+    )
+    conn.commit()
+    conn.close()
+    write_log("security","HIGH",
+              f"IP FLAGGED: {ip} tagged as [{tag}] by {session.get('user','SOC')} — {note}",
+              ip=ip, username=session.get("user"))
+    return jsonify({"status": "flagged", "ip": ip, "tag": tag})
 
 # ─── DFIR ROUTES ──────────────────────────────────────────────────────────────
 @app.route("/dfir")
